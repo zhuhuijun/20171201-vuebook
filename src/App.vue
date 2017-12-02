@@ -33,4 +33,11 @@
   input, button {
     -web-kit-appearance: none
   }
+  .content{
+    position: fixed;
+    width: 100%;
+    top:40px;
+    bottom: 50px;
+    overflow:auto;
+  }
 </style>

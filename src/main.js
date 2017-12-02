@@ -6,10 +6,15 @@ import router from './router'
 
 Vue.config.productionTip = false
 
+//轮播图插件
+import VueAwesomeSwiper from 'vue-awesome-swiper'
+
+Vue.use(VueAwesomeSwiper)
+import('swiper/dist/css/swiper.css');
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
   router,
   template: '<App/>',
-  components: { App }
+  components: {App}
 })
