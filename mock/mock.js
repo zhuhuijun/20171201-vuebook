@@ -1,7 +1,7 @@
 let http = require('http');
 let fs = require('fs');
 let url = require('url');
-
+let path  =require('path');
 //读文件
 function read(callback) {
   fs.readFile('./book.json', 'utf8', function (err, data) {
@@ -17,8 +17,11 @@ function write(books, callback) {
   fs.writeFile('./book.json', JSON.stringify(books), callback);
 }
 
+let pageSize = 5;//每页的数据
 //获取轮播图 /sliders
 let sliders = require('./sliders');
+let mymime = require('./mymime');
+
 http.createServer((req, res) => {
 
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -38,7 +41,9 @@ http.createServer((req, res) => {
     read(function (books) {
       let hot = books.reverse().slice(0, 6);
       res.setHeader('Content-Type', "application/json;charset=utf8");
-      return res.end(JSON.stringify(hot));
+      setTimeout(() => {
+        return res.end(JSON.stringify(hot));
+      }, 1000);
     });
     return;
   }
@@ -119,4 +124,54 @@ http.createServer((req, res) => {
     }
     return;
   }
+  /**
+   * 分页的数据
+   */
+  if (pathname === '/page') {
+
+    let offset = parseInt(query.offset) || 0;
+    //console.log(offset);
+    read(function (books) {
+      let ret = books.reverse().slice(offset, pageSize + offset);
+      let hasMore = true;
+      if (books.length < offset + pageSize) {
+        hasMore = false;
+      }
+      res.setHeader('Content-Type', "application/json;charset=utf8");
+      return res.end(JSON.stringify({hasMore: hasMore, books: ret}));
+    })
+    return;
+  }
+
+
+
+  fs.stat('.' + pathname, function (err, stats) {
+    if (err) {
+      res.statusCode = 404;
+      res.end('Not Found');
+    } else {
+      //res.setHeader('Content-Type', "text/html;charset=utf8");
+      if (stats.isDirectory()) {
+        let p = require('path').join('.' + pathname, './index.html');
+        res.writeHead(200, {                     //响应客户端，将文件内容发回去
+          'Content-type': 'text/html'
+        });    //通过后缀名指定mime类型
+        fs.createReadStream(p).pipe(res);
+
+      } else {
+        //如果是目录会报错
+        let pp = '.' + pathname;
+        console.info("pp=%s", pp);
+        var ext = path.extname(pp);
+        ext = ext?ext.slice(1) : 'unknown';
+        var contentType = mymime[ext] || "text/plain";
+        res.writeHead(200, {                     //响应客户端，将文件内容发回去
+          'Content-type': contentType
+        });
+        console.info(contentType);
+        fs.createReadStream('.' + pathname).pipe(res);
+      }
+
+    }
+  })
 }).listen(3000);

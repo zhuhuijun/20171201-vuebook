@@ -13,8 +13,10 @@
     "axios": "^0.17.1",
     "less": "^2.7.3",
     "less-loader": "^4.0.5",
+    "mime": "^2.0.3",
     "vue": "^2.5.2",
     "vue-awesome-swiper": "^3.0.3",
+    "vue-lazyload": "^1.1.4",
     "vue-router": "^3.0.1",
     "vuex": "^3.0.1"
   },

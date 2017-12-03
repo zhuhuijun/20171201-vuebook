@@ -1,6 +1,14 @@
 <template>
   <div id="app">
-    <router-view/>
+    <transition name="fadeIn">
+      <keep-alive>
+        <router-view v-if="$route.meta.keepAlive"/>
+      </keep-alive>
+    </transition>
+    <transition>
+      <router-view v-if="!$route.meta.keepAlive"/>
+    </transition>
+
     <Tab></Tab>
   </div>
 </template>
@@ -33,11 +41,26 @@
   input, button {
     -web-kit-appearance: none
   }
-  .content{
+
+  .content {
     position: fixed;
     width: 100%;
-    top:40px;
+    top: 40px;
     bottom: 50px;
-    overflow:auto;
+    overflow: auto;
+  }
+
+  .fadeIn-enter {
+    opacity: 0;
+
+  }
+
+  .fadeIn-enter-active {
+    transition: all 0.8s linear;
+  }
+
+  .fadeIn-leave-active {
+    transition: all 0.8s linear;
+    opacity: 0;
   }
 </style>

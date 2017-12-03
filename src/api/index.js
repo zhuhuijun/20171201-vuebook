@@ -54,6 +54,19 @@ export let updateBook = (id, data) => {
  * @param data
  * @returns {*}
  */
-export let addBook=(data)=>{
+export let addBook = (data) => {
   return axios.post("/book", data);
 }
+/***
+ * 整合的方法
+ */
+export let getAll = () => {
+  return axios.all([getSliders(), getHotBook()]);
+};
+/**
+ * 分页数据
+ * @param offset
+ */
+export let pageData = (offset) => {
+  return axios.get(`/page?offset=${offset}`);
+};

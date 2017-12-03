@@ -1,12 +1,12 @@
 <template>
   <div>
     <MHeader :back="true">图书列表</MHeader>
-    <div class="content">
+    <div class="content" ref="scroll" @scroll="loadmoreScroll">
       <ul>
         <router-link v-for="(book,index) in books"
                      :to="{name:'detail',params:{bid:book.bookId}}"
                      :key="index" tag="li">
-          <img :src="book.bookCover" alt="">
+          <img v-lazy="book.bookCover" alt="">
           <div class="right">
             <h4>{{book.title}}</h4>
             <p>{{book.bookInfo}}</p>
@@ -15,6 +15,7 @@
           </div>
         </router-link>
       </ul>
+      <div @click="loadmore" class="more">加载更多</div>
     </div>
   </div>
 </template>
@@ -63,23 +64,95 @@
     border: none;
     border-radius: 15px;
   }
+
+  .more {
+    text-align: center;
+    height: 40px;
+    margin: 10px;
+    background: green;
+    line-height: 40px;
+    font-size: 20px;
+    font-weight: bold;
+    display: none;
+  }
 </style>
 
 <script>
   import MHeader from '../base/MHeader.vue';
-  import {getBooks, removeBook} from '../api';
+  import {getBooks, removeBook, pageData} from '../api';
 
   export default {
     created() {
-      this.getServerBooks();
+      //this.getServerBooks();
+      this.getServerPage();
     },
     data() {
       return {
-        books: []
+        books: [],
+        offset: 0,
+        hasMore: true,
+        isLoading: false
       }
     },
     components: {
       MHeader
+    },
+    mounted() {
+      let scroll = this.$refs.scroll;
+      let top = scroll.offsetTop;
+      let distance = 0;
+      scroll.addEventListener('touchstart', (e) => {
+        if (scroll.scrollTop != 0 || scroll.offsetTop != top) return;
+        let start = e.touches[0].pageY;
+        console.info("start=%d", start);//手指点击开始
+        let move = (e) => {
+          let current = e.touches[0].pageY;
+          distance = current - start;
+          //负数不要
+          console.info("distance:%d", distance);
+          if (distance > 0) {
+            if (distance <= 50) {
+              scroll.style.top = top + distance + 'px';
+            } else {
+              scroll.style.top = (top + 50) + 'px';
+              distance = 50;
+            }
+
+          } else {
+            try {
+              scroll.removeEventListener('touchmove', move);
+              scroll.removeEventListener('touchend', end);
+              return;
+            } catch (ex) {
+              console.error(ex);
+              return;
+            }
+
+          }
+        };
+        let end = () => {
+          clearInterval(this.tt);
+          this.tt = setInterval(() => {
+            if (distance <= 0) {
+              clearInterval(this.tt);
+              distance = 0;
+              scroll.style.top=top+'px';
+              //获得数据
+              scroll.removeEventListener('touchmove', move);
+              scroll.removeEventListener('touchend', end);
+              this.books=[];
+              this.offset=0;
+              this.hasMore=true;
+              this.getServerPage();
+              return;
+            }
+            distance -= 1;
+            scroll.style.top = top + distance + "px";
+          }, 1);
+        };
+        scroll.addEventListener('touchmove', move);
+        scroll.addEventListener('touchend', end);
+      }, false);
     },
     methods: {
       async getServerBooks() {
@@ -90,6 +163,32 @@
         await removeBook(bookid);
         //删除前台
         this.books = this.books.filter(item => item.bookId !== bookid);
+      },
+      async getServerPage() {
+        if (this.hasMore && !this.isLoading) {
+          this.isLoading = true;
+          let {data: ret} = await pageData(this.offset);
+          this.books = [...this.books, ...ret.books];
+          this.hasMore = ret.hasMore;
+          this.offset = this.books.length;
+          this.isLoading = false;
+        }
+
+      },
+      loadmore() {
+        this.getServerPage();
+      },
+      loadmoreScroll() {
+        //卷曲高度，当前可见高度，总高
+        //截留
+        clearTimeout(this.timer);
+        this.timer = setTimeout(() => {
+          let {scrollTop, clientHeight, scrollHeight} = this.$refs.scroll;
+          console.log(1000);
+          if (scrollTop + clientHeight + 20 > scrollHeight) {
+            this.getServerPage();
+          }
+        }, 100);
       }
     }
   }
