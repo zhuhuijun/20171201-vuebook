@@ -11,7 +11,11 @@
             <h4>{{book.title}}</h4>
             <p>{{book.bookInfo}}</p>
             <b>{{book.bookPrice}}</b>
-            <button type="button" @click.stop="remove(book.bookId)">删除</button>
+            <div class="btnlist">
+              <button type="button" @click.stop="remove(book.bookId)">删除</button>
+              <button type="button" @click.stop>添加</button>
+            </div>
+
           </div>
         </router-link>
       </ul>
@@ -56,13 +60,14 @@
 
   .content button {
     display: block;
-    width: 70px;
+    width: 60px;
     height: 25px;
     outline: none;
     background: orangered;
     color: #fff;
     border: none;
     border-radius: 15px;
+    margin-left: 5px;
   }
 
   .more {
@@ -74,6 +79,10 @@
     font-size: 20px;
     font-weight: bold;
     display: none;
+  }
+  .btnlist{
+    display: flex;
+    justify-content: space-around;
   }
 </style>
 
@@ -101,11 +110,13 @@
       let scroll = this.$refs.scroll;
       let top = scroll.offsetTop;
       let distance = 0;
+      let moved =false;
       scroll.addEventListener('touchstart', (e) => {
         if (scroll.scrollTop != 0 || scroll.offsetTop != top) return;
         let start = e.touches[0].pageY;
         console.info("start=%d", start);//手指点击开始
         let move = (e) => {
+          moved =true;
           let current = e.touches[0].pageY;
           distance = current - start;
           //负数不要
@@ -131,6 +142,8 @@
           }
         };
         let end = () => {
+          if (!moved) return;
+          moved =false;
           clearInterval(this.tt);
           this.tt = setInterval(() => {
             if (distance <= 0) {
