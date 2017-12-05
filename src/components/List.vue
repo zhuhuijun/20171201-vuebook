@@ -13,7 +13,7 @@
             <b>{{book.bookPrice}}</b>
             <div class="btnlist">
               <button type="button" @click.stop="remove(book.bookId)">删除</button>
-              <button type="button" @click.stop>添加</button>
+              <button type="button" @click.stop="addCart(book)">添加</button>
             </div>
 
           </div>
@@ -80,7 +80,8 @@
     font-weight: bold;
     display: none;
   }
-  .btnlist{
+
+  .btnlist {
     display: flex;
     justify-content: space-around;
   }
@@ -89,6 +90,8 @@
 <script>
   import MHeader from '../base/MHeader.vue';
   import {getBooks, removeBook, pageData} from '../api';
+  import * as Types from '../store/types';
+  import {mapState, mapActions} from 'vuex';
 
   export default {
     created() {
@@ -110,13 +113,13 @@
       let scroll = this.$refs.scroll;
       let top = scroll.offsetTop;
       let distance = 0;
-      let moved =false;
+      let moved = false;
       scroll.addEventListener('touchstart', (e) => {
         if (scroll.scrollTop != 0 || scroll.offsetTop != top) return;
         let start = e.touches[0].pageY;
         console.info("start=%d", start);//手指点击开始
         let move = (e) => {
-          moved =true;
+          moved = true;
           let current = e.touches[0].pageY;
           distance = current - start;
           //负数不要
@@ -143,19 +146,19 @@
         };
         let end = () => {
           if (!moved) return;
-          moved =false;
+          moved = false;
           clearInterval(this.tt);
           this.tt = setInterval(() => {
             if (distance <= 0) {
               clearInterval(this.tt);
               distance = 0;
-              scroll.style.top=top+'px';
+              scroll.style.top = top + 'px';
               //获得数据
               scroll.removeEventListener('touchmove', move);
               scroll.removeEventListener('touchend', end);
-              this.books=[];
-              this.offset=0;
-              this.hasMore=true;
+              this.books = [];
+              this.offset = 0;
+              this.hasMore = true;
               this.getServerPage();
               return;
             }
@@ -168,6 +171,7 @@
       }, false);
     },
     methods: {
+      ...mapActions([Types.ADD_CART]),
       async getServerBooks() {
         let {data: books} = await getBooks();
         this.books = books;
@@ -202,6 +206,11 @@
             this.getServerPage();
           }
         }, 100);
+      },
+      //添加购物车
+      addCart(one) {
+        this[Types.ADD_CART](one);
+        //this.$store.commit(Types.ADD_CART,one);
       }
     }
   }
