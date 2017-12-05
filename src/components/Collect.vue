@@ -10,6 +10,7 @@
           <button>+</button>
           <button>删除</button>
         </li>
+        <li>共{{myCount}}本</li>
       </ul>
     </MHeader>
   </div>
@@ -20,11 +21,12 @@
 
 <script>
   import MHeader from '../base/MHeader.vue';
-  import {mapState} from 'vuex';
+  import {mapState,mapGetters} from 'vuex';
 
   export default {
     computed: {
-      ...mapState(["cartList"])
+      ...mapState(["cartList"]),
+      ...mapGetters(["myCount"])
     },
     data() {
       return {}

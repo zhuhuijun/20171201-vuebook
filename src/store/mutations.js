@@ -10,6 +10,7 @@ const mutations = {
     let product = state.cartList.find(item => item.bookId == onebook.bookId);
     if (product) {
       product.bookCount += 1;
+      state.cartList = [...state.cartList];
     } else {
       onebook.bookCount = 1;
       state.cartList = [...state.cartList, onebook];
